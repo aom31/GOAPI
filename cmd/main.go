@@ -4,6 +4,11 @@ import (
 	"log"
 	"project-for-portfolioDEV/GOAPI/config"
 	"project-for-portfolioDEV/GOAPI/database"
+	"project-for-portfolioDEV/GOAPI/src/controller"
+	"project-for-portfolioDEV/GOAPI/src/models"
+	"project-for-portfolioDEV/GOAPI/src/repository"
+	"project-for-portfolioDEV/GOAPI/src/router"
+	"project-for-portfolioDEV/GOAPI/src/service"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
@@ -20,6 +25,9 @@ func main() {
 
 	//mysql
 	dbMysql := database.ConnectionMySQLDB(&loadConfig)
+	dbMysql.AutoMigrate(&models.Noval{})
+
+	//redis
 	dbRedis := database.ConnectionRedisDb(&loadConfig)
 
 	startServer(dbMysql, dbRedis)
@@ -28,7 +36,13 @@ func main() {
 func startServer(dbMysql *gorm.DB, dbRedis *redis.Client) {
 	app := fiber.New()
 
-	err := app.Listen(":3400")
+	novalRepo := repository.NewNovalRepository(dbMysql, dbRedis)
+	novalService := service.NewNovalService(novalRepo)
+	novalController := controller.NewNovalController(novalService)
+
+	routers := router.NewRouter(app, novalController)
+
+	err := routers.Listen(":3400")
 	if err != nil {
 		panic(err)
 	}
