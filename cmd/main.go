@@ -25,7 +25,7 @@ func main() {
 
 	//mysql
 	dbMysql := database.ConnectionMySQLDB(&loadConfig)
-	dbMysql.AutoMigrate(&models.Noval{})
+	dbMysql.AutoMigrate(&models.Document{})
 
 	//redis
 	dbRedis := database.ConnectionRedisDb(&loadConfig)
@@ -36,11 +36,11 @@ func main() {
 func startServer(dbMysql *gorm.DB, dbRedis *redis.Client) {
 	app := fiber.New()
 
-	novalRepo := repository.NewNovalRepository(dbMysql, dbRedis)
-	novalService := service.NewNovalService(novalRepo)
-	novalController := controller.NewNovalController(novalService)
+	docRepo := repository.NewDocumentRepository(dbMysql, dbRedis)
+	docService := service.NewDocumentService(docRepo)
+	docController := controller.NewDocumentController(docService)
 
-	routers := router.NewRouter(app, novalController)
+	routers := router.NewRouter(app, docController)
 
 	err := routers.Listen(":3400")
 	if err != nil {
